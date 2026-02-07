@@ -1,6 +1,3 @@
--- IMPORTANT: Database setup script for User Management System
--- NOTE: This script creates the database schema with UNIQUE INDEX on email
-
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -13,10 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- NOTA BENE: Create UNIQUE INDEX on email column as REQUIRED by specification
--- This ensures email uniqueness at the database level, not in application code
--- IMPORTANT: This guarantees uniqueness even with concurrent inserts
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique ON users(email);
 
 -- Create index on status for faster queries
