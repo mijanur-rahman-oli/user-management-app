@@ -1,16 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
 
 export default defineConfig({
-  root: 'src', 
   plugins: [react()],
-  
   build: {
-    outDir: '../dist',
+    // This ensures the production build goes into a folder the backend can find
+    outDir: 'dist', 
     emptyOutDir: true,
   },
-  
   server: {
     port: 3000,
     proxy: {
