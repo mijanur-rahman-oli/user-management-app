@@ -1,19 +1,26 @@
+// IMPORTANT: Authentication middleware for JWT token validation
+// REQUIREMENT #5: Before each request except registration/login, check if user exists and isn't blocked
 const jwt = require('jsonwebtoken');
 const db = require('../database/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// NOTE: Middleware to verify JWT token and check user status
+// IMPORTANT: This redirects to login if user is blocked or deleted
 async function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access denied. No token provided.' });
-  }
-
   try {
+    // NOTA BENE: Extract token from Authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+      return res.status(401).json({ error: 'Access denied. No token provided.' });
+    }
+
     // NOTE: Verify JWT token
     const decoded = jwt.verify(token, JWT_SECRET);
-
+    
+    // IMPORTANT: Check if user still exists and is not blocked (REQUIREMENT #5)
     const result = await db.query(
       'SELECT id, email, name, status FROM users WHERE id = $1',
       [decoded.userId]

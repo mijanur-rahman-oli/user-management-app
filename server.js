@@ -17,6 +17,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('dist'));
 
+// ============================================================================
+// PUBLIC ROUTES (No authentication required)
+// ============================================================================
+
+// NOTE: User registration endpoint
+// IMPORTANT: UNIQUE INDEX ensures email uniqueness at database level
 app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -25,12 +31,17 @@ app.post('/api/register', async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
     }
+
+    // IMPORTANT: Password can be any non-empty string (even 1 character) as per requirements
     if (password.length === 0) {
       return res.status(400).json({ error: 'Password cannot be empty' });
     }
 
     // NOTE: Hash password
     const passwordHash = await bcrypt.hash(password, 10);
+
+    // IMPORTANT: Insert user - UNIQUE INDEX will prevent duplicate emails
+    // NOTA BENE: No code check for uniqueness - database handles it
     const result = await db.query(
       `INSERT INTO users (name, email, password_hash, status) 
        VALUES ($1, $2, $3, 'unverified') 
@@ -163,6 +174,10 @@ app.get('/api/verify-email', async (req, res) => {
   }
 });
 
+// ============================================================================
+// PROTECTED ROUTES (Authentication required - REQUIREMENT #5)
+// ============================================================================
+
 // NOTE: Get all users (sorted by last_login_time - REQUIREMENT #3)
 app.get('/api/users', authenticateToken, async (req, res) => {
   try {
@@ -235,6 +250,8 @@ app.post('/api/users/unblock', authenticateToken, async (req, res) => {
   }
 });
 
+// NOTE: Delete selected users
+// IMPORTANT: Users are actually DELETED, not marked as deleted
 app.delete('/api/users/delete', authenticateToken, async (req, res) => {
   try {
     const { userIds } = req.body;
@@ -295,7 +312,6 @@ app.get('/api/users/me', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user info' });
   }
 });
-
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
